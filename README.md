@@ -4,7 +4,7 @@ Xthings 的 DeepSeek Harness 品牌插件。一个 bundle，三件事：
 
 1. **启动动画** —— 用品牌动画替换默认启动画面，正常速度播完 3.0 秒再进入主界面。
 2. **侧栏品牌** —— 保留官方鲸鱼图标和官方字标，在字标下面加一行 `Powered by Xthings`。
-3. **首次配置向导** —— 检查 `xthings` 提供方是否存在；缺了就弹出向导，粘贴个人 Key 后自动写好 Base URL、存好凭据、加上插件源，再装两个必备插件。
+3. **首次配置向导** —— 检查 `xthings` 提供方是否存在；缺了就弹出向导，粘贴个人 Key 后自动写好 Base URL、存好凭据、加上插件源，再由使用者逐个确认安装两个推荐插件。
 
 ## 效果预览
 
@@ -58,7 +58,7 @@ dsh plugin install file:/path/to/xthings-dsh-brand
   所以看不到更新入口。再贴一次地址、换成新的 commit 或标签即可（同名覆盖安装，装完重载）：
 
   ```
-  git+https://github.com/CherryLover/xthings-dsh-brand.git#v1.0.1
+  git+https://github.com/CherryLover/xthings-dsh-brand.git#v1.0.2
   ```
 
   想以后都能一键更新，把插件源加进去一次：`https://cherrylover.github.io/xthings-dsh-market/market.json`。
@@ -76,6 +76,8 @@ http://127.0.0.1:<web 端口>/xthings-brand/diag?probe=1
 
 常见原因：凭据文件被 umask 带成 644 时，官方的 `credentials-local` 会拒绝写入 —— 插件现在会自动收紧到 600 再重试一次。
 
+从 `1.0.2` 起，bundle 会自行挂载 Harness 随附的官方 `@deepseek-ai/dsh-llm-pi-ai` 适配器，不再假设目标 profile 已经包含这行。更新 bundle 后必须重启或重载 profile，让新增的 composition 行生效。
+
 ## 首次配置向导
 
 向导只在**缺少 `xthings` 提供方或缺少 Key** 时出现，第二台机器以外不会再打扰。
@@ -90,7 +92,7 @@ http://127.0.0.1:<web 端口>/xthings-brand/diag?probe=1
 
 Key 是**每人一把**，只存在本机凭据库里。发版包里不含任何 Key。
 
-向导第二步装的两个插件，走的是 Harness 官方的插件安装通道（`pluginManager.installBundle`），和手动点安装完全同一条路径：
+向导第二步列出的两个插件，由使用者逐个点击安装；点击后走 Harness 官方的插件安装通道（`pluginManager.installBundle`），不会自动批量安装：
 
 - `dsh-context@0.81.2`（npm）
 - `@local/dsh-trace`（git，锁定 commit `6d45f9c`）
@@ -109,7 +111,7 @@ https://cherrylover.github.io/xthings-dsh-market/market.json
 
 ## 实现要点
 
-- 只往 loader 里插一行（`cordis.patch.yml` 的 `insert`），不 `override` 任何现有配置。loader 的 `config` 是整块替换、不做深合并，直接改会把别人的 provider 表（或插件源列表）冲掉，所以提供方和插件源都在运行时用 `configEditor.edit` / `pluginMarket.setIndexes` 写。
+- 往 loader 里插入官方 `llm-pi-ai` 适配器和品牌插件两行，适配器先挂载、品牌插件再运行。不 `override` 任何现有配置。loader 的 `config` 是整块替换、不做深合并，所以提供方和插件源都在运行时用 `configEditor.edit` / `pluginMarket.setIndexes` 合并写入。
 - 启动动画通过 `webserver/index-inject` 事件贡献四行（Lottie 构建、动画数据、样式、覆盖层脚本），Web 和 Electron 两条路径都走同一份注入表；不用 `tapIndex`，因为 Electron 只转发 `collectIndexInjections()` 的行。
 - Lottie 构建必须原样内联成独立的 `<script>`：它自己会写 `globalThis.lottie`，包一层 `window.lottie = …` 会把结果覆盖成 `undefined`，动画就静默降级成静态字标。
 - 动画数据以 `animationData` 形式内联，不走 `src`/`fetch` —— 打包后是 `file://`，没有可用的 HTTP 路由。

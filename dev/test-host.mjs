@@ -15,6 +15,13 @@ import { join } from 'node:path'
 
 const plugin = await import('../index.js')
 
+const patch = await readFile(new URL('../cordis.patch.yml', import.meta.url), 'utf8')
+const adapterAt = patch.indexOf("name: '@deepseek-ai/dsh-llm-pi-ai'")
+const brandAt = patch.indexOf("name: '@xthings/dsh-brand'")
+assert.ok(adapterAt >= 0, 'bundle mounts the official llm-pi-ai adapter')
+assert.ok(brandAt > adapterAt, 'llm-pi-ai mounts before the setup plugin')
+assert.match(patch.slice(0, brandAt), /id: llm-pi-ai\s+name: '@deepseek-ai\/dsh-llm-pi-ai'\s+config: \{\}/)
+
 /* ---------------- stubs ---------------- */
 
 const profileDir = await mkdtemp(join(tmpdir(), 'xtb-profile-'))
