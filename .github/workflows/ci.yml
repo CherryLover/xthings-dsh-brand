@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 只读；发布那个 job 单独要写权限
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: 检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 这个包没有运行时依赖，不用 npm install：装上反而会掩盖漏声明的依赖
+      - name: 语法
+        run: |
+          node --check index.js
+          node --check client.js
+          node --check assets/splash.js
+          node --check dev/test-host.mjs
+          node --check dev/test-client.mjs
+
+      - name: 宿主半边（路由 / 注入 / 提供方合并 / 安装守卫）
+        run: node dev/test-host.mjs
+
+      - name: 客户端半边（品牌行 / 向导 / 安装流程）
+        run: node dev/test-client.mjs
+
+      - name: 打包内容
+        run: npm pack --dry-run
+
+      # 发布包必须在仓库里就能装起来：入口文件、patch、资产一个都不能少
+      - name: 产物自检
+        run: |
+          npm pack --quiet > /dev/null
+          TARBALL=$(ls xthings-dsh-brand-*.tgz)
+          echo "tarball: $TARBALL"
+          node -e '
+            const { execSync } = require("node:child_process")
+            const list = execSync(`tar -tzf ${process.argv[1]}`).toString().trim().split("\n")
+            const need = ["package/index.js", "package/client.js", "package/cordis.patch.yml", "package/assets/launch.json", "package/assets/lottie.min.js", "package/assets/splash.js", "package/icon.png"]
+            const missing = need.filter((p) => !list.includes(p))
+            if (missing.length) { console.error("missing:", missing); process.exit(1) }
+            console.log("all", need.length, "required files present")
+          ' "$TARBALL"
+          rm -f "$TARBALL"
+
+  release:
+    name: 发布
+    # 只在 main 上的 push（含 PR 合并）才发；PR 本身只跑检查
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 打包
+        id: pack
+        run: |
+          npm pack --quiet > /dev/null
+          TARBALL=$(ls xthings-dsh-brand-*.tgz)
+          VERSION=$(node -p "require('./package.json').version")
+          SHA=$(git rev-parse HEAD)
+          SUM=$(sha256sum "$TARBALL" | cut -d' ' -f1)
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "sum=$SUM" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: 写发布说明
+        run: |
+          cat > NOTES.md <<EOF
+          \`@xthings/dsh-brand\` ${{ steps.pack.outputs.version }}
+
+          安装：
+
+          \`\`\`bash
+          dsh plugin install git+https://github.com/${{ github.repository }}.git#${{ steps.pack.outputs.sha }}
+          \`\`\`
+
+          或者从插件市场「Xthings DSH Plugins」里一键装。
+
+          - commit: \`${{ steps.pack.outputs.sha }}\`
+          - tarball: \`${{ steps.pack.outputs.tarball }}\`
+          - sha256: \`${{ steps.pack.outputs.sum }}\`
+
+          <details><summary>市场索引要用的版本条目</summary>
+
+          \`\`\`json
+          {
+            "version": "${{ steps.pack.outputs.version }}",
+            "source": {
+              "type": "git",
+              "url": "https://github.com/${{ github.repository }}",
+              "commit": "${{ steps.pack.outputs.sha }}"
+            }
+          }
+          \`\`\`
+
+          把这段贴进 \`xthings-dsh-market\` 仓库的 \`market.json\`，所有人下次打开插件市场就是新版本。
+
+          </details>
+          EOF
+
+      - name: 建或更新 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.pack.outputs.tag }}"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "release $TAG exists, refreshing its asset"
+            gh release upload "$TAG" "${{ steps.pack.outputs.tarball }}" --clobber
+            gh release edit "$TAG" --notes-file NOTES.md
+          else
+            gh release create "$TAG" "${{ steps.pack.outputs.tarball }}" \
+              --title "$TAG" --notes-file NOTES.md --target "${{ steps.pack.outputs.sha }}"
+          fi
