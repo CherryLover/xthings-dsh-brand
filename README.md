@@ -8,15 +8,23 @@ Xthings 的 DeepSeek Harness 品牌插件。一个 bundle，三件事：
 
 ## 安装
 
+同事机器上最省事的一条路：打开插件市场，选「Xthings DSH Plugins」这个源，在「装机必备」里点
+**Xthings 品牌** 装上，重启 Harness。这一条走的就是 Harness 官方的安装通道，不用命令行。
+
+命令行也可以：
+
 ```bash
 # 本机开发（直接指向工作目录，改完刷新即可）
 dsh plugin install link:/Users/jiangjiwei/Code/xthings-dsh-brand
 
-# 同事机器（装到自己的 profile）
+# 同事机器（从市场索引里的同一个源装）
+dsh plugin install git+https://github.com/CherryLover/xthings-dsh-brand.git
+
+# 手上的目录
 dsh plugin install file:/path/to/xthings-dsh-brand
 ```
 
-也可以在 Harness 的插件管理界面里直接填安装源。装完重启 Harness 生效。
+装完重启 Harness 生效。第一次进主界面时会先播启动动画，播完才出配置向导。
 
 ## 首次配置向导
 
