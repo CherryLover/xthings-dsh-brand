@@ -136,6 +136,9 @@ jobs:
           TAG="${{ steps.pack.outputs.tag }}"
           if gh release view "$TAG" > /dev/null 2>&1; then
             echo "release $TAG exists, refreshing its asset"
+            # 版本号不动时 release 是滚动的，标签也得跟着滚 —— 否则 #v1.0.1 装的还是上一个提交
+            git tag -f "$TAG" "${{ steps.pack.outputs.sha }}"
+            git push -f origin "refs/tags/$TAG"
             gh release upload "$TAG" "${{ steps.pack.outputs.tarball }}" --clobber
             gh release edit "$TAG" --notes-file NOTES.md
           else
