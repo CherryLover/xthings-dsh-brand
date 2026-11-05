@@ -7,7 +7,7 @@
  */
 
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { chmod, readFile, stat } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -303,20 +303,27 @@ assert.ok(splashBytes.includes('__XTHINGS_SPLASH__'))
 
 console.log(`host-half harness: ${count} assertions passed`)
 
-/* 权限坏掉时自愈：把文件收紧到 600 再写一次，而不是让用户对着"保存失败"发呆 */
+/* 权限坏掉时自愈：把真实路径上的文件收紧到 600 再写一次 */
 {
+  const target = join(tmpdir(), `xtb-cred-${Date.now()}.yaml`)
+  await writeFile(target, 'version: 1\n', { mode: 0o644 })
+  await chmod(target, 0o644)
+
   const realSet = credentials.set
   let attempts = 0
   credentials.set = async (ref, value) => {
     attempts += 1
-    if (attempts === 1) throw new Error('credentials-local: /tmp/x/.credentials.yaml is readable beyond its owner (mode 644)')
+    if (attempts === 1) throw new Error(`credentials-local: ${target} is readable beyond its owner (mode 644)`)
     return realSet(ref, value)
   }
   const healed = await call('/xthings-brand/provision', 'POST', { body: { key: 'sk-good-key-1234' } })
   assert.equal(healed.status, 200, 'permission error self-heals on retry')
   assert.equal(attempts >= 2, true, 'credentials.set retried once')
+  const mode = (await stat(target)).mode & 0o777
+  assert.equal(mode, 0o600, 'the file was tightened to 600')
   credentials.set = realSet
 
+  /* 别的错误不装作能修 */
   const oldSet = credentials.set
   credentials.set = async () => {
     throw new Error('keychain locked')
@@ -327,3 +334,4 @@ console.log(`host-half harness: ${count} assertions passed`)
   assert.ok(String(dead.body.message).includes('keychain locked'), 'the real reason survives')
   credentials.set = oldSet
 }
+

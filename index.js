@@ -508,15 +508,17 @@ async function saveCredential(credentials, key) {
     return null
   } catch (error) {
     const message = error?.message ?? String(error)
-    if (!/readable beyond its owner|EACCES|EPERM|permission denied/i.test(message)) return message
+    /* 只有"文件对别人也可读"这一种情况能自己修，而且要用报错里那个真实路径，
+       不能猜 ~/.dsh（有人把凭据放在别处，猜错只会多一条没用的报错）。 */
+    if (!/readable beyond its owner/i.test(message)) return message
+    const match = /(\/\S+\.ya?ml)/.exec(message)
+    if (!match) return message
     try {
-      const file = join(homedir(), '.dsh', '.credentials.yaml')
-      await stat(file)
-      await chmod(file, 0o600)
+      await chmod(match[1], 0o600)
       await credentials.set(CREDENTIAL_REF, key)
       return null
     } catch (retry) {
-      return `${message}（收紧权限后仍然失败：${retry?.message ?? retry}）`
+      return `${message}（把 ${match[1]} 收紧到 600 后仍然失败：${retry?.message ?? retry}）`
     }
   }
 }
