@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSH shell harness — Xthings splash</title>
+<!-- GENERATED FILE — edit dev/harness.template.html and run:
+     node dev/build-harness.mjs
+     It reproduces the host: inline CSS + three inline <script> rows, in order. -->
+<!--@@XTHINGS_CSS@@-->
+
+<script>
+  /* Simulates the shell's boot signal. It settles at ~1.2 s — deliberately
+     BEFORE the app's first render, which is the trap the overlay must not
+     fall into. */
+  window.__DSH_BOOT_READY__ = {
+    promise: new Promise(function (resolve) {
+      window.setTimeout(function () {
+        var s = document.getElementById('harness-status');
+        if (s) { s.textContent = 'boot inputs installed · ' + Math.round(performance.now()) + ' ms'; }
+        resolve({ ready: true, at: Date.now() });
+      }, 1200);
+    })
+  };
+</script>
+
+<style>
+  :root { color-scheme: light; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #1c1f23;
+    background: #ffffff;
+  }
+
+  #root { position: relative; height: 100vh; overflow: hidden; }
+
+  /* ---- fake DSH shell (behind both splashes) ---- */
+  .harness-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  body.harness-ready .harness-shell { opacity: 1; }
+
+  .harness-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 38px;
+    padding: 0 14px;
+    border-bottom: 1px solid #e8eaed;
+    background: #fafbfc;
+    font-weight: 600;
+    letter-spacing: .01em;
+  }
+  .harness-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+  .harness-titlebar small { font-weight: 400; color: #6b7280; }
+
+  .harness-body { display: flex; flex: 1; min-height: 0; }
+
+  .harness-sidebar {
+    width: 216px;
+    padding: 14px 12px;
+    border-right: 1px solid #e8eaed;
+    background: #fbfbfc;
+    color: #4b5563;
+  }
+  .harness-sidebar h2 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #9aa1ab;
+  }
+  .harness-nav { list-style: none; margin: 0 0 18px; padding: 0; }
+  .harness-nav li { padding: 6px 8px; border-radius: 6px; margin-bottom: 2px; }
+  .harness-nav li.is-active { background: #eef2ff; color: #1d4ed8; }
+
+  .harness-main { flex: 1; min-width: 0; padding: 26px 30px; overflow: auto; }
+  .harness-main h1 { margin: 0 0 6px; font-size: 19px; font-weight: 650; }
+  .harness-main p.lede { margin: 0 0 22px; color: #6b7280; }
+  .harness-card {
+    border: 1px solid #e8eaed;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .harness-skeleton { height: 9px; border-radius: 4px; background: #eef0f3; margin: 8px 0; }
+  .harness-skeleton.w60 { width: 60%; }
+  .harness-skeleton.w35 { width: 35%; }
+  .harness-status {
+    margin-top: 22px;
+    font-size: 12px;
+    color: #9aa1ab;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- the app's own pre-React splash ([data-dsh-boot]) ----
+     Deliberately ugly: if the Xthings overlay leaves too early, this is what
+     you see, which is exactly the flash it has to prevent. */
+  .harness-app-splash {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #e9edf5;
+    color: #5b6472;
+    text-align: center;
+  }
+  .harness-app-splash-mark {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: .35em;
+    color: #c3cad8;
+  }
+  .harness-app-splash p { margin: 0; font-size: 12px; max-width: 320px; }
+</style>
+</head>
+<body>
+
+<div id="root">
+  <div class="harness-shell">
+    <div class="harness-titlebar">
+      <span class="harness-dot"></span>
+      DeepSeek Harness
+      <small>— harness shell preview</small>
+    </div>
+    <div class="harness-body">
+      <aside class="harness-sidebar">
+        <h2>Sessions</h2>
+        <ul class="harness-nav">
+          <li class="is-active">New conversation</li>
+          <li>Workspace notes</li>
+          <li>Release checklist</li>
+        </ul>
+        <h2>Workspace</h2>
+        <ul class="harness-nav">
+          <li>xthings-dsh-brand</li>
+          <li>designs</li>
+        </ul>
+      </aside>
+
+      <main class="harness-main">
+        <h1>Good morning</h1>
+        <p class="lede">Fake shell content — rendered ~2.2 s in, while the splash still covers it.</p>
+
+        <div class="harness-card">
+          <div class="harness-skeleton w60"></div>
+          <div class="harness-skeleton"></div>
+          <div class="harness-skeleton w35"></div>
+        </div>
+        <div class="harness-card">
+          <div class="harness-skeleton w35"></div>
+          <div class="harness-skeleton"></div>
+        </div>
+
+        <div class="harness-status" id="harness-status">booting…</div>
+      </main>
+    </div>
+  </div>
+
+  <!-- the app's own splash: removed when the fake app "renders" -->
+  <div class="harness-app-splash" data-dsh-boot>
+    <div class="harness-app-splash-mark">APP</div>
+    <p>app splash placeholder — you should never see this; the Xthings overlay must outlive it</p>
+  </div>
+</div>
+
+<!--@@XTHINGS_ROWS@@-->
+
+<script>
+  /* Fake React mount: drop the app splash and reveal the shell behind the
+     overlay. ~2.2 s by default; append ?appReady=4200 to make the overlay
+     actually wait on it (the Lottie ends at 3.0 s). */
+  (function () {
+    var asked = Number((location.search.match(/[?&]appReady=(\d+)/) || [])[1]);
+    var appReadyAt = asked > 0 ? asked : 2200;
+    window.setTimeout(function () {
+      var boot = document.querySelector('[data-dsh-boot]');
+      if (boot && boot.parentNode) { boot.parentNode.removeChild(boot); }
+      document.body.classList.add('harness-ready');
+      var s = document.getElementById('harness-status');
+      if (s) { s.textContent = 'app rendered · ' + Math.round(performance.now()) + ' ms'; }
+    }, appReadyAt);
+  })();
+</script>
+</body>
+</html>

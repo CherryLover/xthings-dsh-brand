@@ -1,0 +1,64 @@
+/* Xthings splash overlay — DSH Electron shell.
+   All classes are prefixed `xthings-splash-`. The critical geometry is also
+   written inline by splash.js so the overlay still looks right if this file
+   is missing or late; this sheet owns the transition and the a11y cases. */
+
+#xthings-splash.xthings-splash-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  opacity: 1;
+  transition: opacity 320ms ease-in-out;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* The 800x500 (8:5) animation stage — responsive width, fixed aspect. */
+#xthings-splash .xthings-splash-stage {
+  position: relative;
+  width: min(800px, 72vw);
+  aspect-ratio: 8 / 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+/* Let the Lottie <svg> fill the stage. */
+#xthings-splash .xthings-splash-stage > svg,
+#xthings-splash .xthings-splash-stage svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: visible;
+}
+
+/* Static fallback wordmark (same stage, no network). */
+#xthings-splash .xthings-splash-wordmark {
+  display: block;
+  width: min(320px, 42vw);
+  height: auto;
+  flex: 0 0 auto;
+}
+
+#xthings-splash.xthings-splash-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Reduced motion: keep the overlay and its timing, drop the 320 ms fade. */
+@media (prefers-reduced-motion: reduce) {
+  #xthings-splash.xthings-splash-root,
+  #xthings-splash.xthings-splash-out {
+    transition: none;
+  }
+}
