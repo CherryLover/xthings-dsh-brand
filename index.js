@@ -27,8 +27,10 @@
  */
 
 import { readFileSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
+import { access, chmod, readFile, stat } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { constants as fsConstants } from 'node:fs'
+import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -50,6 +52,7 @@ const MARKET_URL = 'https://cherrylover.github.io/xthings-dsh-market/market.json
 const STATUS_PATH = '/xthings-brand/status'
 const PROVISION_PATH = '/xthings-brand/provision'
 const INSTALL_PATH = '/xthings-brand/install'
+const DIAG_PATH = '/xthings-brand/diag'
 
 /**
  * The install list the wizard offers. `spec` is what goes to the registry, and
@@ -156,6 +159,7 @@ export function apply(ctx) {
     { kind: 'exact', path: STATUS_PATH, handler: (request, response) => statusRoute(ctx, request, response) },
     { kind: 'exact', path: PROVISION_PATH, handler: (request, response) => provisionRoute(ctx, request, response) },
     { kind: 'exact', path: INSTALL_PATH, handler: (request, response) => installRoute(ctx, request, response) },
+    { kind: 'exact', path: DIAG_PATH, handler: (request, response) => diagRoute(ctx, request, response) },
   ]
 
   for (const route of routes) {
@@ -353,6 +357,24 @@ async function discoverModels(key) {
 }
 
 /**
+ * Entry ids we can actually see, for the "why can we not write" message.
+ * @param configEditor - the config editor service.
+ * @returns entry labels.
+ */
+function readableRows(configEditor) {
+  try {
+    const table = configEditor.configuration()
+    if (!Array.isArray(table)) return []
+    return table
+      .map((row) => row?.entry?.id ?? row?.entry?.name)
+      .filter((id) => typeof id === 'string' && id.length > 0)
+      .slice(0, 12)
+  } catch {
+    return []
+  }
+}
+
+/**
  * Add the Xthings market source when it is not configured yet. Best effort: a
  * failure here must not undo a successful key setup.
  * @param pluginMarket - the plugin market service.
@@ -471,6 +493,130 @@ async function statusRoute(ctx, request, response) {
 }
 
 /**
+ * The credential file must be owner-only; `credentials-local` refuses to write
+ * when it is group- or world-readable, which a fresh machine can produce with a
+ * different umask. Tightening the mode of our own credential file and writing
+ * again is a safe self-repair; anything else is reported verbatim.
+ *
+ * @param credentials - the credentials service.
+ * @param key - the API key to store.
+ * @returns the failure message, or null on success.
+ */
+async function saveCredential(credentials, key) {
+  try {
+    await credentials.set(CREDENTIAL_REF, key)
+    return null
+  } catch (error) {
+    const message = error?.message ?? String(error)
+    if (!/readable beyond its owner|EACCES|EPERM|permission denied/i.test(message)) return message
+    try {
+      const file = join(homedir(), '.dsh', '.credentials.yaml')
+      await stat(file)
+      await chmod(file, 0o600)
+      await credentials.set(CREDENTIAL_REF, key)
+      return null
+    } catch (retry) {
+      return `${message}（收紧权限后仍然失败：${retry?.message ?? retry}）`
+    }
+  }
+}
+
+/**
+ * `GET /xthings-brand/diag` — why a save failed, on a machine we cannot see.
+ *
+ * The wizard only shows "保存失败，请重试", which is useless when the cause is
+ * "the credential file is not writable" or "there is no llm-pi-ai entry in this
+ * composition". This route reports what we can see from the host half, and with
+ * `?probe=1` it also performs a throwaway credential write and reports the
+ * error verbatim (the probe ref is removed again, the real key is never read).
+ *
+ * @param ctx - Host context.
+ * @param request - Node request.
+ * @param response - Node response.
+ */
+async function diagRoute(ctx, request, response) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    reply(response, 405, { ok: false, code: 'method-not-allowed' })
+    return
+  }
+  if (!sameSite(request)) {
+    reply(response, 403, { ok: false, code: 'forbidden' })
+    return
+  }
+
+  const credentials = service(ctx, 'credentials')
+  const configEditor = service(ctx, 'configEditor')
+  const row = configEditor ? llmRow(configEditor) : undefined
+
+  let describe
+  try {
+    describe = credentials ? await credentials.describe(CREDENTIAL_REF) : null
+  } catch (error) {
+    describe = { error: error?.message ?? String(error) }
+  }
+
+  const home = homedir()
+  const credentialFile = join(home, '.dsh', '.credentials.yaml')
+  let file
+  try {
+    const info = await stat(credentialFile)
+    let writable = true
+    try {
+      await access(credentialFile, fsConstants.W_OK)
+    } catch {
+      writable = false
+    }
+    file = { path: credentialFile, mode: `0${(info.mode & 0o777).toString(8)}`, bytes: info.size, writable }
+  } catch (error) {
+    file = { path: credentialFile, exists: false, error: error?.code ?? String(error) }
+  }
+
+  const probeWanted = /(?:^|[?&])probe=1(?:&|$)/.test(request.url ?? '')
+  let probe
+  if (probeWanted) {
+    if (!credentials) {
+      probe = { attempted: false, reason: 'no credentials service' }
+    } else {
+      try {
+        await credentials.set('XTHINGS_DIAG_PROBE', 'probe')
+        await credentials.unset('XTHINGS_DIAG_PROBE')
+        probe = { attempted: true, ok: true }
+      } catch (error) {
+        probe = { attempted: true, ok: false, error: error?.message ?? String(error) }
+        try {
+          await credentials.unset('XTHINGS_DIAG_PROBE')
+        } catch {
+          /* nothing more we can do */
+        }
+      }
+    }
+  }
+
+  reply(response, 200, {
+    schema: 1,
+    version: VERSION,
+    platform: { os: process.platform, node: process.version, home },
+    services: {
+      credentials: Boolean(credentials),
+      configEditor: Boolean(configEditor),
+      pluginManager: Boolean(service(ctx, 'pluginManager')),
+      pluginMarket: Boolean(service(ctx, 'pluginMarket')),
+    },
+    llmRow: row
+      ? {
+          found: true,
+          entryId: row.entry?.id ?? null,
+          entryName: row.entry?.name ?? null,
+          providers: Object.keys(row.providers ?? {}),
+        }
+      : { found: false },
+    credential: { ref: CREDENTIAL_REF, describe },
+    credentialFile: file,
+    probe,
+  })
+}
+
+/**
  * `POST /xthings-brand/provision` — verify a key, store it, create the provider.
  * @param ctx - Host context.
  * @param request - Node request.
@@ -515,16 +661,21 @@ async function provisionRoute(ctx, request, response) {
   // The provider schema takes model *objects*; a bare string fails validation.
   const modelEntries = models.map((id) => ({ id }))
 
-  try {
-    await credentials.set(CREDENTIAL_REF, key)
-  } catch (error) {
-    reply(response, 500, { ok: false, code: 'config', message: `保存凭据失败：${error?.message ?? error}` })
+  const saveFailure = await saveCredential(credentials, key)
+  if (saveFailure !== null) {
+    reply(response, 500, { ok: false, code: 'config', message: `保存凭据失败：${saveFailure}` })
     return
   }
 
   const row = llmRow(configEditor)
   if (!row?.entry) {
-    reply(response, 503, { ok: false, code: 'config', message: '找不到模型提供方配置（llm-pi-ai）' })
+    /* 说清楚我们看到了什么，别让人对着"保存失败"猜。 */
+    const seen = readableRows(configEditor)
+    reply(response, 503, {
+      ok: false,
+      code: 'config',
+      message: `找不到模型提供方配置（llm-pi-ai）${seen.length > 0 ? `，当前装载的是：${seen.join('、')}` : '，当前没有可写的插件配置'}`,
+    })
     return
   }
 

@@ -49,6 +49,19 @@ dsh plugin install file:/path/to/xthings-dsh-brand
 
 装完重启 Harness 生效。第一次进主界面时会先播启动动画，播完才出配置向导。
 
+### 保存失败怎么办
+
+向导报「保存失败，请重试」时，括号里会带上宿主的真实原因。把这段发出来，或者在出问题的那台机器上打开：
+
+```
+http://127.0.0.1:<web 端口>/xthings-brand/diag?probe=1
+```
+
+它会回答四件事：凭据/配置服务在不在、`llm-pi-ai` 那一行有没有、`~/.dsh/.credentials.yaml` 的权限位、
+以及试写一把凭据的真实报错（写的是一条临时 ref，用完立刻删掉，不会碰你的 Key）。
+
+常见原因：凭据文件被 umask 带成 644 时，官方的 `credentials-local` 会拒绝写入 —— 插件现在会自动收紧到 600 再重试一次。
+
 ## 首次配置向导
 
 向导只在**缺少 `xthings` 提供方或缺少 Key** 时出现，第二台机器以外不会再打扰。
@@ -95,8 +108,9 @@ https://cherrylover.github.io/xthings-dsh-market/market.json
 | `GET /xthings-brand/status` | 向导是否需要出现、提供方/凭据/插件/插件源现状 |
 | `POST /xthings-brand/provision` | `{key}` → 校验、存凭据、写提供方、补插件源 |
 | `POST /xthings-brand/install` | `{id}` → 装一个推荐插件（一次一个，已装则跳过） |
+| `GET /xthings-brand/diag` | 装不上时用：服务在不在、`llm-pi-ai` 这一行找不找得到、凭据文件权限、`?probe=1` 还会试写一次凭据把真实报错带回来 |
 
-三条路由都做同源校验（`sec-fetch-site`、`origin`、`host`），跨站请求一律 403，响应统一 `no-store`。
+这几条路由都做同源校验（`sec-fetch-site`、`origin`、`host`），跨站请求一律 403，响应统一 `no-store`。
 
 ## 设计画布
 

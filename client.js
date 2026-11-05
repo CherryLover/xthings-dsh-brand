@@ -558,7 +558,12 @@ window.__ModuleLoader__.load({
 							jsx("div", { className: "xtb-readonly", children: baseURL === "" ? DEFAULT_BASE : baseURL })
 						]
 					}),
-					jsx("p", { className: "xtb-error", role: "status", "aria-live": "polite", children: error === null ? "" : t(error) }),
+					jsx("p", {
+						className: "xtb-error",
+						role: "status",
+						"aria-live": "polite",
+						children: error === null ? "" : error.startsWith("error.") ? t(error) : error
+					}),
 					jsxs("div", {
 						className: "xtb-actions",
 						children: [
@@ -817,16 +822,18 @@ window.__ModuleLoader__.load({
 					return;
 				}
 				const code = answer !== null && typeof answer.code === "string" ? answer.code : "unreachable";
-				setBusy(false);
-				setError(
+				const errorKey =
 					code === "invalid-key"
 						? "error.invalidKey"
 						: code === "bad-request"
 							? "error.empty"
 							: code === "unreachable"
 								? "error.unreachable"
-								: "error.config"
-				);
+								: "error.config";
+				/* 宿主说得出原因就把它带上：只说"保存失败"等于让人干瞪眼。 */
+				const detail = answer !== null && typeof answer.message === "string" && answer.message !== "" ? answer.message : null;
+				setBusy(false);
+				setError(detail !== null && errorKey === "error.config" ? `${t(errorKey)}（${detail}）` : errorKey);
 			};
 
 			const runInstall = async () => {

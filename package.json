@@ -1,6 +1,6 @@
 {
   "name": "@xthings/dsh-brand",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Xthings startup animation, the Powered by Xthings byline, and the first-run connection setup.",
   "type": "module",

@@ -293,6 +293,18 @@ for (const [code, copy] of [["unreachable", "连不上 Xthings"], ["config", "�
   check(dumpTree(tree).includes(copy), "error copy for " + code);
 }
 
+/* 7b. 宿主说得出原因，向导要把它带到脸上 */
+provision = { ok: false, code: "config", message: "保存凭据失败：EACCES" };
+const i7 = byClass("xtb-input")[0];
+i7.props.onChange({ target: { value: "sk-test" } });
+tree = await RT.render(overlay.Comp, {});
+byClass("xtb-primary")[0].props.onClick();
+await new Promise((r) => setTimeout(r, 30));
+tree = await RT.render(overlay.Comp, {});
+text = dumpTree(tree);
+check(text.includes("保存失败"), "generic line stays");
+check(text.includes("保存凭据失败：EACCES"), "host reason reaches the user");
+
 /* 8. success -> step 2 */
 provision = { ok: true, models: ["xthings/auto"], baseURL: "https://s2a.xthings.dev/v1" };
 status = { ...status, credential: { ref: "XTHINGS_API_KEY", present: true }, provider: { ...status.provider, configured: true } };

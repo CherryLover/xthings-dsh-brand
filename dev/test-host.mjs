@@ -8,6 +8,7 @@
 
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -22,7 +23,7 @@ await writeFile(
   JSON.stringify({ dependencies: { 'dsh-context': '^0.78.2', dshmarket: '1.73.6' } }, null, 2),
 )
 
-const calls = { installs: [], edits: [], sets: [], indexes: [] }
+const calls = { installs: [], edits: [], sets: [], unsets: [], indexes: [] }
 
 const providerRow = {
   entry: { id: 'llm-pi-ai', name: 'llm-pi-ai' },
@@ -42,9 +43,15 @@ const configEditor = {
 
 const credentials = {
   resolve: async (ref) => (ref === 'XTHINGS_API_KEY' && state.secret ? { value: state.secret } : undefined),
+  describe: async (ref) => ({ configured: ref === 'XTHINGS_API_KEY' && Boolean(state.secret), source: 'file', writable: true }),
   set: async (ref, value) => {
     calls.sets.push({ ref, value })
-    state.secret = value
+    if (ref === 'XTHINGS_API_KEY') state.secret = value
+    state.probe = value
+  },
+  unset: async (ref) => {
+    calls.unsets.push({ ref })
+    if (ref === 'XTHINGS_DIAG_PROBE') state.probe = undefined
   },
 }
 
@@ -105,10 +112,11 @@ globalThis.fetch = async (url, init) => {
 
 /* ---------------- request/response helpers ---------------- */
 
-function fakeRequest(method, { body, headers = {} } = {}) {
+function fakeRequest(method, { body, headers = {}, url = '' } = {}) {
   const text = body === undefined ? '' : JSON.stringify(body)
   return {
     method,
+    url,
     headers: { host: '127.0.0.1:58501', origin: 'http://127.0.0.1:58501', ...headers },
     async *[Symbol.asyncIterator]() {
       if (text) yield Buffer.from(text)
@@ -130,18 +138,30 @@ function fakeResponse() {
   }
 }
 
-async function call(path, method, options) {
+async function call(target, method, options) {
   const response = fakeResponse()
-  await routes.get(path).handler(fakeRequest(method, options), response)
+  const path = target.split('?')[0]
+  await routes.get(path).handler(fakeRequest(method, { ...options, url: target }), response)
   return response.captured
 }
 
 /* ---------------- run ---------------- */
 
+/** 数一遍真的断言，别写死一个会撒谎的数字。 */
+function countAssertions() {
+  return (source().match(/^\s*assert\./gm) ?? []).length
+}
+
+function source() {
+  return readFileSync(new URL(import.meta.url), 'utf8')
+}
+
+
 plugin.apply(ctx)
 await new Promise((resolve) => setTimeout(resolve, 50))
 
 assert.deepEqual([...routes.keys()].sort(), [
+  '/xthings-brand/diag',
   '/xthings-brand/install',
   '/xthings-brand/provision',
   '/xthings-brand/status',
@@ -220,6 +240,24 @@ assert.deepEqual(status.body.provider.models, [{ id: 'deepseek-chat' }, { id: 'd
 assert.equal(status.body.credential.present, true)
 assert.equal(status.body.market.configured, true)
 
+// diag：把"为什么保存失败"讲清楚，且探针用过就擦干净
+const diag = await call('/xthings-brand/diag?probe=1', 'GET')
+assert.equal(diag.status, 200)
+assert.equal(diag.body.services.credentials, true)
+assert.equal(diag.body.services.configEditor, true)
+assert.equal(diag.body.llmRow.found, true)
+assert.equal(diag.body.llmRow.entryId, 'llm-pi-ai')
+assert.deepEqual(diag.body.llmRow.providers, ['openai', 'xthings'])
+assert.equal(diag.body.probe.ok, true, 'throwaway credential write works')
+assert.ok(calls.sets.some((c) => c.ref === 'XTHINGS_DIAG_PROBE'), 'probe writes to its own ref')
+assert.ok(calls.unsets.some((c) => c.ref === 'XTHINGS_DIAG_PROBE'), 'probe ref cleaned up')
+assert.equal(state.secret, 'sk-good-key-1234', 'the real key is untouched by the probe')
+
+// 没有探针参数时不许写凭据
+const diagQuiet = await call('/xthings-brand/diag', 'GET')
+assert.equal(diagQuiet.body.probe, undefined)
+assert.equal(diagQuiet.status, 200)
+
 // install: already present
 let already = await call('/xthings-brand/install', 'POST', { body: { id: 'dsh-context' } })
 assert.equal(already.status, 200)
@@ -259,7 +297,33 @@ let failed = await call('/xthings-brand/install', 'POST', { body: { id: 'dsh-tra
 assert.equal(failed.body.ok, false)
 assert.equal(failed.body.message, 'git-prepare-not-allowed')
 
+const count = countAssertions()
 const splashBytes = await readFile(new URL('../assets/splash.js', import.meta.url), 'utf8')
 assert.ok(splashBytes.includes('__XTHINGS_SPLASH__'))
 
-console.log('host-half harness: 27 assertions passed')
+console.log(`host-half harness: ${count} assertions passed`)
+
+/* 权限坏掉时自愈：把文件收紧到 600 再写一次，而不是让用户对着"保存失败"发呆 */
+{
+  const realSet = credentials.set
+  let attempts = 0
+  credentials.set = async (ref, value) => {
+    attempts += 1
+    if (attempts === 1) throw new Error('credentials-local: /tmp/x/.credentials.yaml is readable beyond its owner (mode 644)')
+    return realSet(ref, value)
+  }
+  const healed = await call('/xthings-brand/provision', 'POST', { body: { key: 'sk-good-key-1234' } })
+  assert.equal(healed.status, 200, 'permission error self-heals on retry')
+  assert.equal(attempts >= 2, true, 'credentials.set retried once')
+  credentials.set = realSet
+
+  const oldSet = credentials.set
+  credentials.set = async () => {
+    throw new Error('keychain locked')
+  }
+  const dead = await call('/xthings-brand/provision', 'POST', { body: { key: 'sk-good-key-1234' } })
+  assert.equal(dead.status, 500)
+  assert.equal(dead.body.code, 'config')
+  assert.ok(String(dead.body.message).includes('keychain locked'), 'the real reason survives')
+  credentials.set = oldSet
+}
