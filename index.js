@@ -36,7 +36,14 @@ import { fileURLToPath } from 'node:url'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ASSETS = join(HERE, 'assets')
 
-const VERSION = '1.0.0'
+/* 版本号只留在 package.json 一处，发版时不会忘了改常量。 */
+const VERSION = (() => {
+  try {
+    return JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version ?? '0.0.0'
+  } catch {
+    return '0.0.0'
+  }
+})()
 
 /** Provider id the wizard creates; the typo'd `xhings-ds` row is left alone. */
 const PROVIDER_ID = 'xthings'

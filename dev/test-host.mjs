@@ -243,6 +243,7 @@ assert.equal(status.body.market.configured, true)
 // diag：把"为什么保存失败"讲清楚，且探针用过就擦干净
 const diag = await call('/xthings-brand/diag?probe=1', 'GET')
 assert.equal(diag.status, 200)
+assert.equal(diag.body.version, JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version, 'version comes from package.json')
 assert.equal(diag.body.services.credentials, true)
 assert.equal(diag.body.services.configEditor, true)
 assert.equal(diag.body.llmRow.found, true)
