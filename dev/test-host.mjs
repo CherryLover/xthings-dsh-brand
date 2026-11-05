@@ -13,10 +13,11 @@ import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-const plugin = await import('../host-v1.0.3.js')
+const plugin = await import('../index.js')
 
 const patch = await readFile(new URL('../cordis.patch.yml', import.meta.url), 'utf8')
-assert.match(patch, /id: xthings-brand-v1\.0\.3\s+name: '@xthings\/dsh-brand\/host-v1\.0\.3'/)
+assert.match(patch, /id: xthings-brand-v1\.0\.4\s+name: '@xthings\/dsh-brand'/)
+assert.doesNotMatch(patch, /name: '@xthings\/dsh-brand\//, 'Client discovery requires a bare package name')
 assert.doesNotMatch(patch, /llm-pi-ai/, 'bundle must not duplicate the adapter supplied by dsh-base')
 
 /* ---------------- stubs ---------------- */
@@ -197,6 +198,22 @@ assert.deepEqual(calls.indexes, [
   ['https://cdn.dsh.so/market/top-rank.json', 'https://cherrylover.github.io/xthings-dsh-market/market.json'],
 ])
 assert.equal(status.captured ?? status.headers['cache-control'], 'no-store')
+
+// A fresh profile has an adapter but no providers field yet.
+const configuredRow = state.row
+state.row = { entry: { id: 'include:llm-pi-ai', name: '@deepseek-ai/dsh-llm-pi-ai' }, inherited: {}, override: {} }
+const freshDiag = await call('/xthings-brand/diag', 'GET')
+assert.equal(freshDiag.body.llmRow.found, true, 'empty adapter remains writable')
+const freshProvision = await call('/xthings-brand/provision', 'POST', { body: { key: 'sk-good-key-1234' } })
+assert.equal(freshProvision.status, 200, 'first provider can be added to a pristine adapter')
+assert.equal(state.row.override.providers.xthings.apiKeyEnv, 'XTHINGS_API_KEY')
+state.row = { entry: { id: 'unrelated', name: 'unrelated' }, override: { providers: {} } }
+const unrelatedDiag = await call('/xthings-brand/diag', 'GET')
+assert.equal(unrelatedDiag.body.llmRow.found, false, 'never write into another plugin with a providers map')
+state.row = configuredRow
+state.secret = undefined
+calls.sets.length = 0
+calls.edits.length = 0
 
 // foreign origin is refused
 let refused = await call('/xthings-brand/provision', 'POST', {

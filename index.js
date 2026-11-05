@@ -296,7 +296,7 @@ function llmRow(configEditor) {
     const label = `${row?.entry?.id ?? ''} ${row?.entry?.name ?? ''}`
     return /llm-pi-ai/i.test(label)
   })
-  const chosen = named.find(({ providers }) => providers !== undefined) ?? rows.find(({ providers }) => providers !== undefined)
+  const chosen = named.find(({ providers }) => providers !== undefined) ?? named[0]
   if (!chosen) return undefined
   return { entry: chosen.row.entry, providers: chosen.providers ?? {} }
 }

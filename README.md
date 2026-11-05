@@ -58,7 +58,7 @@ dsh plugin install file:/path/to/xthings-dsh-brand
   所以看不到更新入口。再贴一次地址、换成新的 commit 或标签即可（同名覆盖安装，装完重载）：
 
   ```
-  git+https://github.com/CherryLover/xthings-dsh-brand.git#v1.0.3
+  git+https://github.com/CherryLover/xthings-dsh-brand.git#v1.0.4
   ```
 
   想以后都能一键更新，把插件源加进去一次：`https://cherrylover.github.io/xthings-dsh-market/market.json`。
@@ -76,7 +76,7 @@ http://127.0.0.1:<web 端口>/xthings-brand/diag?probe=1
 
 常见原因：凭据文件被 umask 带成 644 时，官方的 `credentials-local` 会拒绝写入 —— 插件现在会自动收紧到 600 再重试一次。
 
-Harness 的 `dsh-base` 会挂载官方 `@deepseek-ai/dsh-llm-pi-ai` 适配器，品牌 bundle 只添加自己的插件行。`1.0.3` 移除了 `1.0.2` 中重复的适配器行，并采用版本化 Host 入口，避免升级后出现同 id composition 行和旧 Host fiber 并存。Host entry id 和子路径都带发布版本，市场升级会把旧行删除并挂载新行；若界面提示需要重启，完整退出并重新启动 Harness。
+Harness 的 `dsh-base` 会挂载官方 `@deepseek-ai/dsh-llm-pi-ai` 适配器，品牌 bundle 只添加自己的插件行。`1.0.4` 修复了 `1.0.3` 的子路径入口导致客户端向导无法被发现的问题：入口必须使用裸包名，不能使用 Host 子路径。同时修复全新 profile 中 adapter 尚无 providers 字段时无法保存第一家提供方的问题。升级后如仍运行旧 Host，请完整退出再启动；热更新是否成功须以实际路由和客户端挂载为准。
 
 ## 首次配置向导
 
@@ -111,7 +111,7 @@ https://cherrylover.github.io/xthings-dsh-market/market.json
 
 ## 实现要点
 
-- loader 只插入品牌插件行；官方 `llm-pi-ai` 适配器由 Harness 的 `dsh-base` 提供。Host entry id 和子路径都带发布版本，使市场升级时 Loader 必然删除旧行并挂载新模块。品牌插件不 `override` 任何现有配置。loader 的 `config` 是整块替换、不做深合并，所以提供方和插件源都在运行时用 `configEditor.edit` / `pluginMarket.setIndexes` 合并写入。
+- loader 只插入品牌插件行；官方 `llm-pi-ai` 适配器由 Harness 的 `dsh-base` 提供。Host entry name 使用裸包名以便 Harness 发现客户端；版本化 row id 不保证热更新后的旧模块一定被替换，应检查实际路由版本。品牌插件不 `override` 任何现有配置。loader 的 `config` 是整块替换、不做深合并，所以提供方和插件源都在运行时用 `configEditor.edit` / `pluginMarket.setIndexes` 合并写入。
 - 启动动画通过 `webserver/index-inject` 事件贡献四行（Lottie 构建、动画数据、样式、覆盖层脚本），Web 和 Electron 两条路径都走同一份注入表；不用 `tapIndex`，因为 Electron 只转发 `collectIndexInjections()` 的行。
 - Lottie 构建必须原样内联成独立的 `<script>`：它自己会写 `globalThis.lottie`，包一层 `window.lottie = …` 会把结果覆盖成 `undefined`，动画就静默降级成静态字标。
 - 动画数据以 `animationData` 形式内联，不走 `src`/`fetch` —— 打包后是 `file://`，没有可用的 HTTP 路由。
