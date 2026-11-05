@@ -29,6 +29,7 @@ jobs:
       - name: 语法
         run: |
           node --check index.js
+          node --check host-v1.0.3.js
           node --check client.js
           node --check assets/splash.js
           node --check dev/test-host.mjs
@@ -38,14 +39,13 @@ jobs:
       - name: 宿主半边（路由 / 注入 / 提供方合并 / 安装守卫）
         run: node dev/test-host.mjs
 
-      - name: Bundle 基础模型适配器
+      - name: Bundle composition
         run: |
           node -e '
             const fs = require("node:fs")
             const patch = fs.readFileSync("cordis.patch.yml", "utf8")
-            const adapter = patch.indexOf("@deepseek-ai/dsh-llm-pi-ai")
-            const brand = patch.indexOf("@xthings/dsh-brand")
-            if (adapter < 0 || brand <= adapter) throw new Error("llm-pi-ai must be inserted before xthings-brand")
+            if (!patch.includes("xthings-brand-v1.0.3") || !patch.includes("@xthings/dsh-brand/host-v1.0.3")) throw new Error("versioned xthings-brand row missing")
+            if (patch.includes("llm-pi-ai")) throw new Error("dsh-base already supplies llm-pi-ai; duplicate rows break upgrades")
           '
 
       - name: 客户端半边（品牌行 / 向导 / 安装流程）
@@ -66,13 +66,11 @@ jobs:
           node -e '
             const { execSync } = require("node:child_process")
             const list = execSync(`tar -tzf ${process.argv[1]}`).toString().trim().split("\n")
-            const need = ["package/index.js", "package/client.js", "package/cordis.patch.yml", "package/assets/launch.json", "package/assets/lottie.min.js", "package/assets/splash.js", "package/icon.png"]
+            const need = ["package/index.js", "package/host-v1.0.3.js", "package/client.js", "package/cordis.patch.yml", "package/assets/launch.json", "package/assets/lottie.min.js", "package/assets/splash.js", "package/icon.png"]
             const missing = need.filter((p) => !list.includes(p))
             if (missing.length) { console.error("missing:", missing); process.exit(1) }
             const patch = execSync(`tar -xOf ${process.argv[1]} package/cordis.patch.yml`).toString()
-            const adapter = patch.indexOf("@deepseek-ai/dsh-llm-pi-ai")
-            const brand = patch.indexOf("@xthings/dsh-brand")
-            if (adapter < 0 || brand <= adapter) { console.error("invalid adapter patch"); process.exit(1) }
+            if (!patch.includes("xthings-brand-v1.0.3") || !patch.includes("@xthings/dsh-brand/host-v1.0.3") || patch.includes("llm-pi-ai")) { console.error("invalid bundle patch"); process.exit(1) }
             console.log("all", need.length, "required files present")
           ' "$TARBALL"
           rm -f "$TARBALL"

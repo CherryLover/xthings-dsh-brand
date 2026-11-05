@@ -1,17 +1,19 @@
 {
   "name": "@xthings/dsh-brand",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "Xthings startup animation, the Powered by Xthings byline, and the first-run connection setup.",
   "type": "module",
   "exports": {
     ".": "./index.js",
+    "./host-v1.0.3": "./host-v1.0.3.js",
     "./client": "./client.js",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.png"
   },
   "files": [
     "index.js",
+    "host-v1.0.3.js",
     "client.js",
     "cordis.patch.yml",
     "icon.png",
