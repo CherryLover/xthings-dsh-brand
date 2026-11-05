@@ -49,6 +49,20 @@ dsh plugin install file:/path/to/xthings-dsh-brand
 
 装完重启 Harness 生效。第一次进主界面时会先播启动动画，播完才出配置向导。
 
+### 更新
+
+两种装法，更新方式不一样：
+
+- **从市场装的**：插件市场里这个条目会显示「可更新」，点一下就是最新版。
+- **直接贴 GitHub 地址装的**：那条依赖被钉在当时的 commit 上，市场不会把它和索引里的条目对上，
+  所以看不到更新入口。再贴一次地址、换成新的 commit 或标签即可（同名覆盖安装，装完重载）：
+
+  ```
+  git+https://github.com/CherryLover/xthings-dsh-brand.git#v1.0.1
+  ```
+
+  想以后都能一键更新，把插件源加进去一次：`https://cherrylover.github.io/xthings-dsh-market/market.json`。
+
 ### 保存失败怎么办
 
 向导报「保存失败，请重试」时，括号里会带上宿主的真实原因。把这段发出来，或者在出问题的那台机器上打开：
