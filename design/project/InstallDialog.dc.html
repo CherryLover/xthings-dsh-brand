@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>官方安装弹窗</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#2f5fc4}a:hover{color:#1e46a0}
+*{box-sizing:border-box}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 720px; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Helvetica, Arial, sans-serif; padding: 48px 56px; color: #0f1115;">
+
+  <h1 style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 600;">点「安装」之后：Harness 自己的安装弹窗</h1>
+  <p style="margin: 6px 0 0; font-size: 13px; line-height: 20px; color: #61666b;">弹窗是官方的，我们只负责把包名和来源填好。措辞、授权、失败重试、镜像回退全都沿用原样，不重写。</p>
+
+  <div style="margin-top: 28px; display: flex; gap: 32px;">
+
+    <div style="flex: 1; min-width: 0;">
+      <div style="background: #ffffff; border: 1px solid #0000001a; border-radius: 16px; box-shadow: 0 8px 24px #0f111514; overflow: hidden;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #0000000f;">
+          <span style="font-size: 15px; line-height: 22px; font-weight: 600;">安装插件</span>
+          <span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: #61666b;">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" stroke-width="1"><path d="M3.5 3.5L12.5 12.5" stroke="currentColor"></path><path d="M12.5 3.5L3.5 12.5" stroke="currentColor"></path></svg>
+          </span>
+        </div>
+        <div style="padding: 20px;">
+          <div style="font-size: 12px; line-height: 18px; color: #61666b;">插件包名</div>
+          <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+            <span style="font-family: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace; font-size: 13px; line-height: 20px;">github:CherryLover/dsh-trace</span>
+            <span style="flex: none; padding: 1px 6px; border-radius: 4px; background: #ebeef2; font-size: 11px; line-height: 14px; color: #61666b;">Git 仓库</span>
+          </div>
+          <div style="margin-top: 16px; padding: 12px 14px; background: #f9fafb; border-radius: 8px; font-size: 12px; line-height: 18px; color: #61666b;">请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 DeepSeek Harness，或读取和泄露你的数据。</div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid #0000000f;">
+          <button type="button" style="height: 36px; padding: 0 14px; border: 1px solid #0000001f; border-radius: 8px; background: #ffffff; color: #0f1115; font-family: inherit; font-size: 13px; cursor: pointer;">关闭</button>
+          <button type="button" style="height: 36px; padding: 0 16px; border: 0; border-radius: 8px; background: #0f1115; color: #ffffff; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;">安装</button>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; line-height: 18px; color: #61666b;">预填完成，主按钮已是「安装」，回车即走。</div>
+    </div>
+
+    <div style="flex: 1; min-width: 0;">
+      <div style="background: #ffffff; border: 1px solid #0000001a; border-radius: 16px; box-shadow: 0 8px 24px #0f111514; overflow: hidden;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #0000000f;">
+          <span style="font-size: 15px; line-height: 22px; font-weight: 600;">插件安装中…</span>
+          <span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: #61666b;">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" stroke-width="1"><path d="M3.5 3.5L12.5 12.5" stroke="currentColor"></path><path d="M12.5 3.5L3.5 12.5" stroke="currentColor"></path></svg>
+          </span>
+        </div>
+        <div style="padding: 20px;">
+          <div style="font-size: 12px; line-height: 18px; color: #61666b;">插件包名</div>
+          <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+            <span style="font-family: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace; font-size: 13px; line-height: 20px;">github:CherryLover/dsh-trace</span>
+            <span style="flex: none; padding: 1px 6px; border-radius: 4px; background: #ebeef2; font-size: 11px; line-height: 14px; color: #61666b;">Git 仓库</span>
+          </div>
+          <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 18px; color: #61666b;">
+            <span style="width: 6px; height: 6px; border-radius: 3px; background: #4176e6;"></span>
+            正在下载依赖并应用配置…
+          </div>
+          <div style="margin-top: 12px; height: 3px; border-radius: 2px; background: #ebeef2; overflow: hidden; display: flex;">
+            <div style="width: 62%; height: 3px; background: #0f1115;"></div>
+          </div>
+          <div style="margin-top: 12px; font-size: 11px; line-height: 14px; color: #61666b; font-family: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;">pnpm add github:CherryLover/dsh-trace</div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid #0000000f;">
+          <button type="button" style="height: 36px; padding: 0 14px; border: 1px solid #0000001f; border-radius: 8px; background: #ffffff; color: #0f1115; font-family: inherit; font-size: 13px; cursor: pointer;">取消安装</button>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; line-height: 18px; color: #61666b;">进度、取消、失败后的「改用国内镜像」都由 Harness 处理。</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 24px; display: flex; gap: 12px; padding: 14px 16px; background: #ffffff; border: 1px solid #0000001a; border-radius: 12px;">
+    <div style="flex: 1; min-width: 0; font-size: 12px; line-height: 18px; color: #61666b;">
+      <span style="color: #0f1115; font-weight: 500;">一个取舍：</span>dsh-trace 是纯 JS 包，从 Git 装不需要构建，所以这一步没有授权弹窗；dsh-context 用 npm 包名装（它仓库里有 <span style="font-family: 'SF Mono', Menlo, monospace;">prepare</span> 构建脚本，走 Git 会触发构建），也不会弹授权。两个都是点一下就完。
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

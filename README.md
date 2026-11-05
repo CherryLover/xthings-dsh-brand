@@ -75,6 +75,23 @@ https://cherrylover.github.io/xthings-dsh-market/market.json
 
 三条路由都做同源校验（`sec-fetch-site`、`origin`、`host`），跨站请求一律 403，响应统一 `no-store`。
 
+## 设计画布
+
+`design/` 是这六块画板的源文件（`project/canvas.json` + 每个画板一个 `.dc.html`），可以在支持
+Design (canvas) 格式的编辑器里直接打开 `design/` 目录查看和改字：
+
+| 画板 | 内容 |
+| --- | --- |
+| Main | 第一步：粘贴 Key |
+| Step2-plugins | 第二步：两个必备插件 |
+| Step3-done | 第三步：完成 |
+| Brand | 侧栏品牌那两行的规格（官方锁排 + 副行，含放大和折叠态） |
+| Splash | 启动动画的时间轴 |
+| InstallDialog | 宿主自己的安装弹窗（不是我们的界面，只做参照） |
+
+画板里的品牌图形都是 `design/assets/logo.svg` 那份官方矢量手工内联进去的，改的时候保持同一个来源。
+`node dev/check-design.mjs` 会在 CI 里确认"登记的画板和实际文件对得上"。
+
 ## 开发
 
 ```bash

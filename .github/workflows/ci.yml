@@ -33,12 +33,16 @@ jobs:
           node --check assets/splash.js
           node --check dev/test-host.mjs
           node --check dev/test-client.mjs
+          node --check dev/check-design.mjs
 
       - name: 宿主半边（路由 / 注入 / 提供方合并 / 安装守卫）
         run: node dev/test-host.mjs
 
       - name: 客户端半边（品牌行 / 向导 / 安装流程）
         run: node dev/test-client.mjs
+
+      - name: 设计画布
+        run: node dev/check-design.mjs
 
       - name: 打包内容
         run: npm pack --dry-run

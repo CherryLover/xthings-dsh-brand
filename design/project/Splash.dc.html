@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>启动动画</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 720px; background: #f7f8f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Helvetica, Arial, sans-serif; color: #222325; padding: 30px 48px;">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;">
+    <div>
+      <h1 style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 600;">启动动画：3.0 秒播一次，末帧定格 600 ms 后淡出</h1>
+      <p style="margin: 6px 0 0; font-size: 13px; line-height: 20px; color: #8e8e8f;"><span style="font-family: 'SF Mono', Menlo, Consolas, monospace;">xthings-launch.json</span> · 800×500 · 60 fps · 180 帧 = 3.0 s · 1× 原速播一次 · 全矢量，无字体依赖，内嵌 2 张位图（zigbee / uwb 图标）</p>
+    </div>
+    <div style="flex: none; text-align: right;">
+      <div style="font-size: 11px; line-height: 14px; color: #8e8e8f;">真机播放，先看这个</div>
+      <div style="margin-top: 2px; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 13px; line-height: 20px; color: #0068B7;">127.0.0.1:8137</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 16px; background: #ffffff; border: 1px solid #22232514; border-radius: 16px; padding: 18px 22px 14px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+      <div style="font-size: 13px; line-height: 20px; font-weight: 600;">这条动画实际在什么时间做什么</div>
+      <div style="font-size: 11px; line-height: 14px; color: #8e8e8f;">横向 = 3 秒，读自 46 个图层的关键帧</div>
+    </div>
+
+    <div style="margin-top: 14px; display: flex; align-items: flex-start; gap: 12px;">
+      <div style="width: 132px; flex: none;"></div>
+      <div style="flex: 1; display: flex; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 10px; line-height: 12px; color: #8e8e8f;">
+        <span style="width: 16.667%;">0 s</span><span style="width: 16.667%;">0.5</span><span style="width: 16.667%;">1.0</span><span style="width: 16.667%;">1.5</span><span style="width: 16.667%;">2.0</span><span style="width: 16.667%;">2.5</span><span style="width: 16.667%; text-align: right;">3.0</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 6px; border-top: 1px solid #22232514;">
+      <div style="display: flex; align-items: center; height: 38px; border-bottom: 1px solid #2223250a;">
+        <div style="width: 132px; flex: none; font-size: 12px; line-height: 18px; color: #222325;">轨道转动</div>
+        <div style="flex: 1; position: relative; height: 38px;">
+          <div style="position: absolute; top: 20px; left: 2.3%; width: 66.7%; height: 8px; border-radius: 4px; background: #dcdcdc;"></div>
+          <div style="position: absolute; top: 2px; left: 2.3%; font-size: 10px; line-height: 14px; color: #8e8e8f;">0.07 → 2.07 s</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; height: 38px; border-bottom: 1px solid #2223250a;">
+        <div style="width: 132px; flex: none; font-size: 12px; line-height: 18px; color: #222325;">设备 / 协议 / 品牌方块</div>
+        <div style="flex: 1; position: relative; height: 38px;">
+          <div style="position: absolute; top: 20px; left: 3.3%; width: 59%; height: 8px; border-radius: 4px; background: #cfd6dd;"></div>
+          <div style="position: absolute; top: 2px; left: 3.3%; font-size: 10px; line-height: 14px; color: #8e8e8f;">0.10 → 1.87 s · 6 台设备、8 个协议、4 个品牌逐个出现</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; height: 38px; border-bottom: 1px solid #2223250a;">
+        <div style="width: 132px; flex: none; font-size: 12px; line-height: 18px; color: #222325;">信号汇入</div>
+        <div style="flex: 1; position: relative; height: 38px;">
+          <div style="position: absolute; top: 20px; left: 26.7%; width: 32.2%; height: 8px; border-radius: 4px; background: #9fc4e8;"></div>
+          <div style="position: absolute; top: 2px; left: 26.7%; font-size: 10px; line-height: 14px; color: #8e8e8f;">0.80 → 1.77 s · 8 根，每根差 4 帧</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; height: 38px; border-bottom: 1px solid #2223250a;">
+        <div style="width: 132px; flex: none; font-size: 12px; line-height: 18px; color: #222325;">X 合成</div>
+        <div style="flex: 1; position: relative; height: 38px;">
+          <div style="position: absolute; top: 20px; left: 56.7%; width: 14.3%; height: 8px; border-radius: 4px; background: #0068B7;"></div>
+          <div style="position: absolute; top: 2px; left: 56.7%; font-size: 10px; line-height: 14px; color: #8e8e8f;">1.70 → 2.13 s · 黑斜杠 + 两块蓝</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; height: 38px;">
+        <div style="width: 132px; flex: none; font-size: 12px; line-height: 18px; color: #222325;">字标 + 标语</div>
+        <div style="flex: 1; position: relative; height: 38px;">
+          <div style="position: absolute; top: 20px; left: 81%; width: 18.3%; height: 8px; border-radius: 4px; background: #222325;"></div>
+          <div style="position: absolute; top: 2px; left: 81%; font-size: 10px; line-height: 14px; color: #8e8e8f;">2.43 → 2.98 s · 逐字打出</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 12px; display: flex; align-items: baseline; gap: 8px; font-size: 12px; line-height: 18px; color: #222325;">
+      <span style="flex: none; padding: 1px 6px; border-radius: 4px; background: #0068B7; color: #ffffff; font-size: 10px; line-height: 15px;">之后</span>
+      <span style="min-width: 0;">播到第 180 帧就停，不循环：末帧定格 <span style="font-weight: 600;">600 ms</span> 让人看清锁排，再 <span style="font-weight: 600;">320 ms</span> 淡出到白底。整段约 3.9 秒。</span>
+    </div>
+
+    <div style="margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: #f7f8f8; font-size: 12px; line-height: 18px; color: #222325;">
+      <span style="font-weight: 600;">这条时间轴决定了取舍：</span>「Xthings」四个字到第 2.98 秒才写完。所以「主界面一就绪就切」会切在轨道和方块那一幕——用户只看见一堆图标转圈，不知道这是谁家的东西。
+    </div>
+  </div>
+
+  <div style="margin-top: 16px; display: flex; gap: 14px; align-items: stretch;">
+    <div style="flex: 1; background: #ffffff; border: 1px solid #22232514; border-radius: 12px; padding: 14px 16px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <span style="font-size: 13px; line-height: 20px; font-weight: 600;">A · 每次都播完</span>
+        <span style="font-size: 11px; line-height: 14px; color: #8e8e8f;">3.0 s</span>
+      </div>
+      <div style="margin-top: 4px; font-size: 12px; line-height: 18px; color: #8e8e8f;">主界面已就绪也等满 3 秒。最好看，但每天开十次就是每天等 30 秒。</div>
+    </div>
+    <div style="flex: 1; background: #ffffff; border: 1px solid #22232514; border-radius: 12px; padding: 14px 16px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <span style="font-size: 13px; line-height: 20px; font-weight: 600;">B · 就绪即收</span>
+        <span style="font-size: 11px; line-height: 14px; color: #8e8e8f;">≈1.2 s</span>
+      </div>
+      <div style="margin-top: 4px; font-size: 12px; line-height: 18px; color: #8e8e8f;">最快，但如上，字标永远看不到。等于白做这条动画。</div>
+    </div>
+    <div style="flex: 1.15; background: #ffffff; border: 1.5px solid #222325; border-radius: 12px; padding: 14px 16px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <span style="font-size: 13px; line-height: 20px; font-weight: 600;">C · 播满原速，末帧定格</span>
+        <span style="padding: 1px 6px; border-radius: 4px; background: #0068B7; font-size: 10px; line-height: 15px; color: #ffffff;">已选定</span>
+      </div>
+      <div style="margin-top: 4px; font-size: 12px; line-height: 18px; color: #222325;">1× 原速播满 3.0 秒，不做加速；末帧定格 600 ms，再 320 ms 淡出。主界面若提前就绪也不切，等这一遍走完。首次安装和以后每次都是同一版。</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 12px; display: flex; gap: 14px;">
+    <div style="flex: 1; background: #ffffff; border: 1px solid #22232514; border-radius: 12px; padding: 14px 16px;">
+      <div style="font-size: 13px; line-height: 20px; font-weight: 600;">亮色限定</div>
+      <div style="margin-top: 4px; font-size: 12px; line-height: 18px; color: #8e8e8f;">这条是 <span style="font-family: 'SF Mono', Menlo, Consolas, monospace;">Orbit (light)</span>，铺满 <span style="font-family: 'SF Mono', Menlo, Consolas, monospace;">#ffffff</span>。v1 只做亮色：暗色模式下也播这一版，启动瞬间会白一下。不做暗色 JSON。</div>
+    </div>
+    <div style="flex: 1; background: #ffffff; border: 1px solid #22232514; border-radius: 12px; padding: 14px 16px;">
+      <div style="font-size: 13px; line-height: 20px; font-weight: 600;">播放器</div>
+      <div style="margin-top: 4px; font-size: 12px; line-height: 18px; color: #8e8e8f;">用 lottie-web 的 SVG 渲染（305 KB，随插件一起发）。不引 CDN，离线可用。6 秒硬超时兜底；系统开了「减少动态效果」时保留时长，只去掉 320 ms 淡出。</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
