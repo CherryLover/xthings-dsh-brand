@@ -6,6 +6,29 @@ Xthings 的 DeepSeek Harness 品牌插件。一个 bundle，三件事：
 2. **侧栏品牌** —— 保留官方鲸鱼图标和官方字标，在字标下面加一行 `Powered by Xthings`。
 3. **首次配置向导** —— 检查 `xthings` 提供方是否存在；缺了就弹出向导，粘贴个人 Key 后自动写好 Base URL、存好凭据、加上插件源，再装两个必备插件。
 
+## 效果预览
+
+启动动画：1× 播满 3.0 秒（800×500 / 60fps / 180 帧），末帧定格 600 ms，再 320 ms 淡出。
+
+![启动动画](docs/splash.gif)
+
+首次配置向导的三步：
+
+| 第一步 · 连接 | 第二步 · 插件 |
+| --- | --- |
+| [![第一步](docs/design/01-main.png)](docs/design/01-main.png) | [![第二步](docs/design/02-plugins.png)](docs/design/02-plugins.png) |
+
+| 第三步 · 完成 | 侧栏品牌规格 |
+| --- | --- |
+| [![第三步](docs/design/03-done.png)](docs/design/03-done.png) | [![侧栏品牌](docs/design/04-brand.png)](docs/design/04-brand.png) |
+
+| 启动动画规格 | 宿主的安装弹窗（参照） |
+| --- | --- |
+| [![启动动画规格](docs/design/05-splash.png)](docs/design/05-splash.png) | [![安装弹窗](docs/design/06-install.png)](docs/design/06-install.png) |
+
+点图看原尺寸。GIF 和这六张图都是生成的：`docs/splash.gif` 由 `assets/launch.json` 逐帧渲染，
+画板图由 `design/` 拍出来，改完画板跑一次 `node dev/make-design-shots.mjs` 就对齐了。
+
 ## 安装
 
 同事机器上最省事的一条路：打开插件市场，选「Xthings DSH Plugins」这个源，在「装机必备」里点
@@ -100,6 +123,13 @@ node dev/test-host.mjs
 
 # 启动动画：自包含测试页，file:// 或本地 http 都能开
 ./dev/serve.sh        # http://127.0.0.1:8138/dev/harness.html
+
+# 重新生成 README 里的预览（需要本机 Chrome + ffmpeg）
+node dev/make-preview.mjs        # → docs/splash.gif
+node dev/make-design-shots.mjs   # → docs/design/*.png
+
+# 画布自检：canvas.json 登记的画板和实际文件对不对得上
+node dev/check-design.mjs
 ```
 
 `dev/` 不进发布包（`package.json` 的 `files` 只列了运行时要用的东西）。
