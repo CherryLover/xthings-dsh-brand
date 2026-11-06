@@ -465,6 +465,22 @@
     })();
   }
 
+  // Desktop may prepare the workspace behind its native welcome window.
+  // Do not spend the playback or watchdog budgets until the user can see it.
+  function whenVisible(fn) {
+    if (DOC.visibilityState !== 'hidden') { fn(); return; }
+    var fired = false;
+    var go = function () {
+      if (fired || DOC.visibilityState === 'hidden') { return; }
+      fired = true;
+      DOC.removeEventListener('visibilitychange', go);
+      fn();
+    };
+    DOC.addEventListener('visibilitychange', go);
+    // Covers a visibility change between the first check and subscription.
+    go();
+  }
+
   /* ------------------------------------------------------------------ api */
 
   ROOT.__XTHINGS_SPLASH__ = {
@@ -475,11 +491,13 @@
 
   try {
     whenBody(function () {
-      try {
-        start();
-      } catch (e) {
-        forceRemove('error');
-      }
+      whenVisible(function () {
+        try {
+          start();
+        } catch (e) {
+          forceRemove('error');
+        }
+      });
     });
   } catch (e) {
     forceRemove('error');

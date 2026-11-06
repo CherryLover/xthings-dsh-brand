@@ -58,7 +58,7 @@ dsh plugin install file:/path/to/xthings-dsh-brand
   所以看不到更新入口。再贴一次地址、换成新的 commit 或标签即可（同名覆盖安装，装完重载）：
 
   ```
-  git+https://github.com/CherryLover/xthings-dsh-brand.git#v1.0.4
+  git+https://github.com/CherryLover/xthings-dsh-brand.git#v1.0.5
   ```
 
   想以后都能一键更新，把插件源加进去一次：`https://cherrylover.github.io/xthings-dsh-market/market.json`。
@@ -77,6 +77,13 @@ http://127.0.0.1:<web 端口>/xthings-brand/diag?probe=1
 常见原因：凭据文件被 umask 带成 644 时，官方的 `credentials-local` 会拒绝写入 —— 插件现在会自动收紧到 600 再重试一次。
 
 Harness 的 `dsh-base` 会挂载官方 `@deepseek-ai/dsh-llm-pi-ai` 适配器，品牌 bundle 只添加自己的插件行。`1.0.4` 修复了 `1.0.3` 的子路径入口导致客户端向导无法被发现的问题：入口必须使用裸包名，不能使用 Host 子路径。同时修复全新 profile 中 adapter 尚无 providers 字段时无法保存第一家提供方的问题。升级后如仍运行旧 Host，请完整退出再启动；热更新是否成功须以实际路由和客户端挂载为准。
+
+### 1.0.5 修复与验证范围
+
+- Air 的真实 Host 状态是 `needsSetup: true`、Key 已保存、provider 尚未配置。旧客户端把两者用「或」判断为完成，推荐插件都装好时会直接隐藏向导。现在必须同时具备 Key 和 provider 才能跳过第一步；旧的步骤编号不能代替真实配置。
+- Desktop 若先显示官方欢迎窗口，隐藏的工作区可能提前播放完动画。现在等工作区可见后才启动播放和安全计时，不改变 1× / 3.0 秒 / 定格 600 ms / 淡出 320 ms 的规格。这是源码确认的条件性问题，尚未证明它就是 Air 动画缺失的原因。
+- 已通过 Host、客户端和隐藏窗口回归测试；Air 的实际安装和冷启动视觉验证由使用者完成，未宣称远端已验收。
+- Desktop 在 Host 启动时捕获注入表；安装后必须完整退出应用再打开，仅刷新页面不能保证加载新的启动动画。
 
 ## 首次配置向导
 

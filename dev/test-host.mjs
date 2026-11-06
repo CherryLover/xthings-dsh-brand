@@ -16,7 +16,7 @@ import { join } from 'node:path'
 const plugin = await import('../index.js')
 
 const patch = await readFile(new URL('../cordis.patch.yml', import.meta.url), 'utf8')
-assert.match(patch, /id: xthings-brand-v1\.0\.4\s+name: '@xthings\/dsh-brand'/)
+assert.match(patch, /id: xthings-brand-v1\.0\.5\s+name: '@xthings\/dsh-brand'/)
 assert.doesNotMatch(patch, /name: '@xthings\/dsh-brand\//, 'Client discovery requires a bare package name')
 assert.doesNotMatch(patch, /llm-pi-ai/, 'bundle must not duplicate the adapter supplied by dsh-base')
 

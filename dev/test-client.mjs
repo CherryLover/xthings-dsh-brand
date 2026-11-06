@@ -417,6 +417,33 @@ await new Promise((r) => setTimeout(r, 320));
 check(dumpTree(await RT.render(overlay.Comp, {})).includes("连接 Xthings"), "guide opens once the splash is gone");
 context.document.getElementById = () => null;
 
+/* Air regression: a saved key does not prove provider configuration exists. */
+for (const installed of [false, true]) {
+  for (const rememberedStep of [null, "3"]) {
+    storage.clear();
+    if (rememberedStep !== null) storage.set("xtb-step", rememberedStep);
+    status = {
+      ...status,
+      needsSetup: true,
+      credential: { ref: "XTHINGS_API_KEY", present: true },
+      provider: { ...status.provider, configured: false },
+      recommended: status.recommended.map((row) => ({ ...row, installed }))
+    };
+    RT = makeRuntime();
+    await RT.render(overlay.Comp, {});
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const regressionTree = dumpTree(await RT.render(overlay.Comp, {}));
+    check(regressionTree.includes("连接 Xthings"), `saved key without provider opens setup (plugins=${installed}, step=${rememberedStep})`);
+    check(storage.get("xtb-step") === "1", "incomplete provider resets remembered step");
+  }
+}
+storage.clear();
+status = { ...status, credential: { ...status.credential, present: false }, provider: { ...status.provider, configured: true } };
+RT = makeRuntime();
+await RT.render(overlay.Comp, {});
+await new Promise((resolve) => setTimeout(resolve, 30));
+check(dumpTree(await RT.render(overlay.Comp, {})).includes("连接 Xthings"), "configured provider without key opens setup");
+
 /* 13. dictionaries */
 const zhKeys = Object.keys(ZH).sort();
 const enKeys = Object.keys(EN).sort();

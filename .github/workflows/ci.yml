@@ -44,12 +44,15 @@ jobs:
           node -e '
             const fs = require("node:fs")
             const patch = fs.readFileSync("cordis.patch.yml", "utf8")
-            if (!patch.includes("xthings-brand-v1.0.4") || !/^\s+name: .@xthings\/dsh-brand.$/m.test(patch)) throw new Error("bare xthings-brand package entry required for Client discovery")
+            if (!patch.includes("xthings-brand-v1.0.5") || !/^\s+name: .@xthings\/dsh-brand.$/m.test(patch)) throw new Error("bare xthings-brand package entry required for Client discovery")
             if (patch.includes("llm-pi-ai")) throw new Error("dsh-base already supplies llm-pi-ai; duplicate rows break upgrades")
           '
 
       - name: 客户端半边（品牌行 / 向导 / 安装流程）
         run: node dev/test-client.mjs
+
+      - name: 启动动画（隐藏桌面窗口 / 可见后播放 / 幂等）
+        run: node dev/test-splash.mjs
 
       - name: 设计画布
         run: node dev/check-design.mjs
@@ -70,7 +73,7 @@ jobs:
             const missing = need.filter((p) => !list.includes(p))
             if (missing.length) { console.error("missing:", missing); process.exit(1) }
             const patch = execSync(`tar -xOf ${process.argv[1]} package/cordis.patch.yml`).toString()
-            if (!patch.includes("xthings-brand-v1.0.4") || !/^\s+name: .@xthings\/dsh-brand.$/m.test(patch) || patch.includes("llm-pi-ai")) { console.error("invalid bundle patch"); process.exit(1) }
+            if (!patch.includes("xthings-brand-v1.0.5") || !/^\s+name: .@xthings\/dsh-brand.$/m.test(patch) || patch.includes("llm-pi-ai")) { console.error("invalid bundle patch"); process.exit(1) }
             console.log("all", need.length, "required files present")
           ' "$TARBALL"
           rm -f "$TARBALL"

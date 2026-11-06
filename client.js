@@ -335,7 +335,7 @@ window.__ModuleLoader__.load({
 		function keyReady(status) {
 			const credential = status !== null && status.credential !== null && typeof status.credential === "object" ? status.credential : {};
 			const provider = status !== null && status.provider !== null && typeof status.provider === "object" ? status.provider : {};
-			return credential.present === true || provider.configured === true;
+			return credential.present === true && provider.configured === true;
 		}
 
 		function pluginsReady(status) {
